@@ -55,7 +55,10 @@ print(map)
 trusted = FCM("./maps/trusted.json")
 s = 0
 
+for i in i_concepts:
+    s += abs(trusted[i].value - map[i].value)
+
 for o in o_concepts:
     s += abs(trusted[o].value - map[o].value)
 
-print("Trust = {}".format((1 - s/8)**2))
+print("Trust = {}".format((1 - s/16)**2))
