@@ -30,7 +30,7 @@ print("Processing FCM:")
 
 for i in range(1, 60):
     map.update()
-    map.save("./maps/example.json")
-    map=FCM("./maps/example.json")
+    map.save("./maps/experiment.json")
+    map=FCM("./maps/experiment.json")
 
 print(map)
