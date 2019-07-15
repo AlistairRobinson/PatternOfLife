@@ -23,7 +23,7 @@ opt = {
 }
 
 def authenticate(inputs={"I_EMPLOYMENT": 0, "I_EDUCATION": 0, "I_COMMERCIAL": 0, "I_VOLUNTEERING": 0, "I_RESIDENTIAL": 0, "I_SPORTS": 0, "I_CULTURAL": 0, "I_TRAVEL": 0}, 
-                 trusted="./maps/trusted.json", file="./maps/experiment.json", weights="./weights.json", ):
+                 trusted="./maps/trusted.json", file="./maps/experiment.json", weights="./weights.json"):
 
     i = 0
     for k in inputs.keys():
@@ -73,6 +73,10 @@ def authenticate(inputs={"I_EMPLOYMENT": 0, "I_EDUCATION": 0, "I_COMMERCIAL": 0,
         s += abs(trusted[o].value - map[o].value)
 
     return (1 - s/16)**2
+
+def conformity(inputs={"I_EMPLOYMENT": 0, "I_EDUCATION": 0, "I_COMMERCIAL": 0, "I_VOLUNTEERING": 0, "I_RESIDENTIAL": 0, "I_SPORTS": 0, "I_CULTURAL": 0, "I_TRAVEL": 0}, 
+               conformity="./maps/conformity.json"):
+    return authenticate(inputs, conformity)
 
 def save(inputs={"I_EMPLOYMENT": 0, "I_EDUCATION": 0, "I_COMMERCIAL": 0, "I_VOLUNTEERING": 0, "I_RESIDENTIAL": 0, "I_SPORTS": 0, "I_CULTURAL": 0, "I_TRAVEL": 0}, 
          file="./maps/experiment.json", weights="./weights.json"):
