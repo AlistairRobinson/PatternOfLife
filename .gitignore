@@ -2,3 +2,5 @@ lib/
 build/
 venv/
 maps/
+__pycache__/
+test.py

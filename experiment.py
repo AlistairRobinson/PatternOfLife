@@ -22,13 +22,15 @@ opt = {
     "-v": set_verbose
 }
 
-def authenticate(dict={"I_EMPLOYMENT": 0, "I_EDUCATION": 0, "I_COMMERCIAL": 0, "I_VOLUNTEERING": 0, "I_RESIDENTIAL": 0, "I_SPORTS": 0, "I_CULTURAL": 0, "I_TRAVEL": 0}, 
+def authenticate(inputs={"I_EMPLOYMENT": 0, "I_EDUCATION": 0, "I_COMMERCIAL": 0, "I_VOLUNTEERING": 0, "I_RESIDENTIAL": 0, "I_SPORTS": 0, "I_CULTURAL": 0, "I_TRAVEL": 0}, 
                  weights="./weights.json", file="./maps/experiment.json", trusted="./maps/trusted.json"):
 
-    for i in range(0, 8):
-        w[i] = int(sys.argv[i + 1]) * r[i]
+    i = 0
+    for k in inputs.keys():
+        w[i] = inputs[k]
+        i += 1
 
-    s = sum(w)
+    s = sum(w) + 1
 
     for i in range(0, 8):
         w[i] /= s
@@ -84,7 +86,7 @@ def main():
     for i in range(0, 8):
         w[i] = int(sys.argv[i + 1]) * r[i]
 
-    s = sum(w)
+    s = sum(w) + 1
 
     for i in range(0, 8):
         w[i] /= s
