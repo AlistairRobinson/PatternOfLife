@@ -1,3 +1,9 @@
+"""
+Pattern of Life Analyser for SSID Historic Data
+Developed by Alistair Robinson, July 2019
+FCM library developed by M Puheim, used under open license
+"""
+
 from fcmlib import FCM
 import json
 import sys
