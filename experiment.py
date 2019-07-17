@@ -25,6 +25,18 @@ opt = {
     "-v": set_verbose
 }
 
+def construct(a, b, c, d, e, f, g, h):
+    return {
+        "I_EMPLOYMENT": a, 
+        "I_EDUCATION": b, 
+        "I_COMMERCIAL": c, 
+        "I_VOLUNTEERING": d, 
+        "I_RESIDENTIAL": e, 
+        "I_SPORTS": f, 
+        "I_CULTURAL": g, 
+        "I_TRAVEL": h
+    }
+
 def authenticate(inputs={"I_EMPLOYMENT": 0, "I_EDUCATION": 0, "I_COMMERCIAL": 0, "I_VOLUNTEERING": 0, "I_RESIDENTIAL": 0, "I_SPORTS": 0, "I_CULTURAL": 0, "I_TRAVEL": 0}, 
                  trusted="./maps/trusted.json", file="./maps/experiment.json", weights="./weights.json"):
 
@@ -82,12 +94,12 @@ def authenticate_from_file(file="./maps/experiment.json", trusted="./maps/truste
     s = 0
 
     for i in i_concepts:
-        s += abs(trusted[i].value - map[i].value)
+        s += abs(trusted[i].value - map[i].value)*10
 
     for o in o_concepts:
-        s += abs(trusted[o].value - map[o].value)
+        s += abs(trusted[o].value - map[o].value)*10
 
-    return (1 - s/16)**2
+    return (1 - s/16)
 
 def conformity(inputs={"I_EMPLOYMENT": 0, "I_EDUCATION": 0, "I_COMMERCIAL": 0, "I_VOLUNTEERING": 0, "I_RESIDENTIAL": 0, "I_SPORTS": 0, "I_CULTURAL": 0, "I_TRAVEL": 0}, 
                conformity="./maps/conformity.json"):
@@ -129,6 +141,9 @@ def save(inputs={"I_EMPLOYMENT": 0, "I_EDUCATION": 0, "I_COMMERCIAL": 0, "I_VOLU
         map.update()
         map.save(file)
         map = FCM(file)
+
+    print(map)
+    print("FCM saved to " + file + " successfully")
 
 def main():
 
