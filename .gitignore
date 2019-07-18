@@ -5,3 +5,4 @@ maps/
 __pycache__/
 test.py
 .vscode/
+*.pyc
