@@ -77,15 +77,19 @@ def construct(d:dict, weights:str="./weights.json") -> FCM:
             O_TRAVEL       = 0
         ), weights)
     else:
+        s = 0
+        for k in d.keys():
+            s += d[k]
+
         return connect(FCM(
-            I_EMPLOYMENT   = d['I_EMPLOYMENT'], 
-            I_EDUCATION    = d['I_EDUCATION'], 
-            I_COMMERCIAL   = d['I_COMMERCIAL'], 
-            I_VOLUNTEERING = d['I_VOLUNTEERING'], 
-            I_RESIDENTIAL  = d['I_RESIDENTIAL'], 
-            I_SPORTS       = d['I_SPORTS'], 
-            I_CULTURAL     = d['I_CULTURAL'], 
-            I_TRAVEL       = d['I_TRAVEL'],
+            I_EMPLOYMENT   = d['I_EMPLOYMENT']/s, 
+            I_EDUCATION    = d['I_EDUCATION']/s, 
+            I_COMMERCIAL   = d['I_COMMERCIAL']/s, 
+            I_VOLUNTEERING = d['I_VOLUNTEERING']/s, 
+            I_RESIDENTIAL  = d['I_RESIDENTIAL']/s, 
+            I_SPORTS       = d['I_SPORTS']/s, 
+            I_CULTURAL     = d['I_CULTURAL']/s, 
+            I_TRAVEL       = d['I_TRAVEL']/s,
             O_EMPLOYMENT   = 0, 
             O_EDUCATION    = 0,
             O_COMMERCIAL   = 0,
@@ -105,14 +109,14 @@ def normalise(l:list) -> list:
 def trust(a:FCM, b:FCM) -> float:
 
     s = 0
-    """
+
     for i in i_concepts:
         s += abs(a[i].value - b[i].value)
-    """
+
     for o in o_concepts:
         s += abs(a[o].value - b[o].value)
 
-    return (1 - s/8)
+    return (1 - s/16)
 
 def connect(new:FCM, weights:str = "./weights.json") -> FCM:
 
