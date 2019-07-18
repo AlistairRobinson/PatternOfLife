@@ -57,7 +57,7 @@ def construct(l:list, weights:str="./weights.json") -> FCM:
         ), weights)
 
 def construct(d:dict, weights:str="./weights.json") -> FCM:
-    if set(d.keys()) == set(i_concepts):
+    if set(d.keys()) != set(i_concepts):
         return connect(FCM(
             I_EMPLOYMENT   = 0, 
             I_EDUCATION    = 0, 
@@ -105,14 +105,14 @@ def normalise(l:list) -> list:
 def trust(a:FCM, b:FCM) -> float:
 
     s = 0
-
+    """
     for i in i_concepts:
         s += abs(a[i].value - b[i].value)
-
+    """
     for o in o_concepts:
         s += abs(a[o].value - b[o].value)
 
-    return (1 - s/16)
+    return (1 - s/8)
 
 def connect(new:FCM, weights:str = "./weights.json") -> FCM:
 
