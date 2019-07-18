@@ -138,7 +138,7 @@ def connect(new:FCM, weights:str = "./weights.json") -> FCM:
     
     return new
 
-def authenticate(new:FCM, trusted:FCM, file:str = "./maps/experiment.json", weights:str = "./weights.json", verbose:bool = False) -> float:
+def authenticate(new:FCM, trusted:FCM, file:str = "./maps/experiment.json", verbose:bool = False) -> float:
     
     for i in range(1, iterations):
         new.update()
@@ -157,7 +157,7 @@ def conformity(new:FCM, conformity:str="./maps/conformity.json"):
 
     return authenticate(inputs, FCM(conformity))
 
-def save(new:FCM, file:str = "./maps/experiment.json", weights:str = "./weights.json", verbose:bool = False) -> bool:
+def save(new:FCM, file:str = "./maps/experiment.json", verbose:bool = False) -> bool:
     
     for i in range(1, iterations):
         new.update()
