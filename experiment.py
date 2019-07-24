@@ -138,12 +138,13 @@ def connect(new:FCM, weights:str = "./weights.json") -> FCM:
     
     return new
 
-def authenticate(new:FCM, trusted:FCM, file:str = "./maps/experiment.json", verbose:bool = False) -> float:
+def authenticate(new:FCM, trusted:FCM, file:str = "./maps/experiment.json", verbose:bool = False, save:bool = False) -> float:
     
     for i in range(1, iterations):
         new.update()
-        new.save(file)
-        new = FCM(file)
+        if (save):
+            new.save(file)
+            new = FCM(file)
 
     if verbose:
         print("Newly generated FCM: ")
