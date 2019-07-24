@@ -118,6 +118,16 @@ def trust(a:FCM, b:FCM) -> float:
 
     return (1 - s/16)
 
+def fingerprint(a:FCM, b:FCM) -> float:
+
+    s = 0
+
+    for i in i_concepts:
+        s += abs(a[i].value - b[i].value)
+
+    return (1 - s/8)
+
+
 def connect(new:FCM, weights:str = "./weights.json") -> FCM:
 
     for i in i_concepts:
