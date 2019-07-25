@@ -4,6 +4,8 @@ Developed by Alistair Robinson, July 2019
 FCM library developed by M Puheim, used under open license
 """
 
+# pylint: disable=function-redefined
+
 from fcmlib import FCM
 import json
 import sys
@@ -151,6 +153,8 @@ def connect(new:FCM, weights:str = "./weights.json") -> FCM:
 def authenticate(new:FCM, trusted:FCM, file:str = "./maps/experiment.json", verbose:bool = False, save:bool = False) -> float:
     
     for i in range(1, iterations):
+        if verbose:
+            print("Performing iteration {}".format(i))
         new.update()
         if (save):
             new.save(file)
@@ -166,11 +170,13 @@ def authenticate(new:FCM, trusted:FCM, file:str = "./maps/experiment.json", verb
 
 def conformity(new:FCM, conformity:str="./maps/conformity.json"):
 
-    return authenticate(inputs, FCM(conformity))
+    return authenticate(new, FCM(conformity))
 
 def save(new:FCM, file:str = "./maps/experiment.json", verbose:bool = False) -> bool:
     
     for i in range(1, iterations):
+        if verbose:
+            print("Performing iteration {}".format(i))
         new.update()
         new.save(file)
         new = FCM(file)
@@ -187,6 +193,7 @@ def main():
 
     def set_verbose():
         verbose = True
+        return verbose
 
     opt = {
         "-v": set_verbose
@@ -195,6 +202,8 @@ def main():
     if len(sys.argv) < 9:
         print("Insufficient arguments")
         exit(0)
+
+    w = []
 
     for i in range(0, 8):
         w[i] = int(sys.argv[i + 1]) * r[i]
