@@ -9,235 +9,55 @@ FCM library developed by M Puheim, used under open license
 
 import json
 import sys
+from pcapfile import savefile
 from fcmlib import FCM
 
-w = [0, 0, 0, 0, 0, 0, 0, 0]
-r = [9, 9, 1, 3, 3, 3, 1, 1]
+devices = {}
+ssids = {}
+threshold = 0
 
-i_concepts = ["I_EMPLOYMENT", "I_EDUCATION", "I_COMMERCIAL", "I_VOLUNTEERING",
-              "I_RESIDENTIAL", "I_SPORTS", "I_CULTURAL", "I_TRAVEL"]
-o_concepts = ["O_EMPLOYMENT", "O_EDUCATION", "O_COMMERCIAL", "O_VOLUNTEERING",
-              "O_RESIDENTIAL", "O_SPORTS", "O_CULTURAL", "O_TRAVEL"]
+for i in range(0, 418):
 
-iterations = 60
+    pcap = savefile.load_savefile(open('./data/probes-2013-03-28.pcap{}'.format(i), 'rb'))
 
-def construct(l: list, weights: str = "./weights.json") -> FCM:
-    if len(l) < 8:
-        return connect(FCM(
-            I_EMPLOYMENT=0,
-            I_EDUCATION=0,
-            I_COMMERCIAL=0,
-            I_VOLUNTEERING=0,
-            I_RESIDENTIAL=0,
-            I_SPORTS=0,
-            I_CULTURAL=0,
-            I_TRAVEL=0,
-            O_EMPLOYMENT=0,
-            O_EDUCATION=0,
-            O_COMMERCIAL=0,
-            O_VOLUNTEERING=0,
-            O_RESIDENTIAL=0,
-            O_SPORTS=0,
-            O_CULTURAL=0,
-            O_TRAVEL=0
-        ), weights)
-    else:
-        return connect(FCM(
-            I_EMPLOYMENT=l[0],
-            I_EDUCATION=l[1],
-            I_COMMERCIAL=l[2],
-            I_VOLUNTEERING=l[3],
-            I_RESIDENTIAL=l[4],
-            I_SPORTS=l[5],
-            I_CULTURAL=l[6],
-            I_TRAVEL=l[7],
-            O_EMPLOYMENT=0,
-            O_EDUCATION=0,
-            O_COMMERCIAL=0,
-            O_VOLUNTEERING=0,
-            O_RESIDENTIAL=0,
-            O_SPORTS=0,
-            O_CULTURAL=0,
-            O_TRAVEL=0
-        ), weights)
+    for packet in pcap.packets:
 
-def construct(d: dict, weights: str = "./weights.json") -> FCM:
-    if set(d.keys()) != set(i_concepts):
-        return connect(FCM(
-            I_EMPLOYMENT=0,
-            I_EDUCATION=0,
-            I_COMMERCIAL=0,
-            I_VOLUNTEERING=0,
-            I_RESIDENTIAL=0,
-            I_SPORTS=0,
-            I_CULTURAL=0,
-            I_TRAVEL=0,
-            O_EMPLOYMENT=0,
-            O_EDUCATION=0,
-            O_COMMERCIAL=0,
-            O_VOLUNTEERING=0,
-            O_RESIDENTIAL=0,
-            O_SPORTS=0,
-            O_CULTURAL=0,
-            O_TRAVEL=0
-        ), weights)
-    else:
-        s = 0
-        for k in d.keys():
-            s += d[k]
+        # Source address [56:68]
+        src = packet.raw().hex()[56:68]
 
-        return connect(FCM(
-            I_EMPLOYMENT=d['I_EMPLOYMENT']/s,
-            I_EDUCATION=d['I_EDUCATION']/s,
-            I_COMMERCIAL=d['I_COMMERCIAL']/s,
-            I_VOLUNTEERING=d['I_VOLUNTEERING']/s,
-            I_RESIDENTIAL=d['I_RESIDENTIAL']/s,
-            I_SPORTS=d['I_SPORTS']/s,
-            I_CULTURAL=d['I_CULTURAL']/s,
-            I_TRAVEL=d['I_TRAVEL']/s,
-            O_EMPLOYMENT=0,
-            O_EDUCATION=0,
-            O_COMMERCIAL=0,
-            O_VOLUNTEERING=0,
-            O_RESIDENTIAL=0,
-            O_SPORTS=0,
-            O_CULTURAL=0,
-            O_TRAVEL=0
-        ), weights)
+        # Tag length [86:88]
+        tag_length = packet.raw().hex()[86:88]
 
-def normalise(l: list) -> list:
-    s = sum(l) + 1
-    for i in range(0, len(l)):
-        l[i] /= s
-    return l
+        if tag_length == "00":
+            continue
 
-def trust(a: FCM, b: FCM) -> float:
+        # SSID [88:110]
+        ssid = bytes.fromhex(packet.raw().hex()[88:110]).decode('utf-8')
 
-    s = 0
+        if devices.get(src) is None:
+            devices[src] = {ssid}
+        else:
+            devices.get(src).add(ssid)
 
-    for i in i_concepts:
-        s += abs(a[i].value - b[i].value)
+for device in list(devices.keys()):
 
-    for o in o_concepts:
-        s += abs(a[o].value - b[o].value)
+    if len(devices.get(device)) < threshold:
+        del devices[device]
 
-    return 1 - s/16
+    for ssid in devices.get(device):
+        if ssids.get(ssid) is None:
+            ssids[ssid] = {device}
+        else:
+            ssids.get(ssid).add(device)
 
-def fingerprint(a: FCM, b: FCM) -> float:
+sorted_ssids = sorted(ssids, key=lambda k: len(ssids[k]), reverse=True)
 
-    s = 0
+#print(devices)
+#print(len(devices))
 
-    for i in i_concepts:
-        s += abs(a[i].value - b[i].value)
+print("Index, Name, Size")
+index = 0
 
-    return 1 - s/8
-
-def connect(new: FCM, weights: str = "./weights.json") -> FCM:
-
-    for i in i_concepts:
-        for o in o_concepts:
-            new.connect(i, o)
-            new[o].relation.set(i, 1)
-
-    data = json.loads(open(weights).read())['w']
-
-    for i in data:
-        for k1 in i.keys():
-            for j in i[k1]:
-                for k2 in j.keys():
-                    if j[k2]['wp'] == 0:
-                        new[k2].relation.set(k1, j[k2]['p'])
-                    else:
-                        new[k2].relation.set(k1, j[k2]['wp'])
-
-    return new
-
-def authenticate(new: FCM, trusted: FCM, file: str = "./maps/experiment.json",
-                 verbose: bool = False, save: bool = False) -> float:
-
-    for i in range(1, iterations):
-        if verbose:
-            print("Performing iteration {}".format(i))
-        new.update()
-        if save:
-            new.save(file)
-            new = FCM(file)
-
-    if verbose:
-        print("Newly generated FCM: ")
-        print(new)
-        print("Trusted FCM: ")
-        print(trusted)
-
-    return trust(new, trusted)
-
-def conformity(new: FCM, conformity: str = "./maps/conformity.json"):
-
-    return authenticate(new, FCM(conformity))
-
-def save(new: FCM, file: str = "./maps/experiment.json",
-         verbose: bool = False) -> bool:
-
-    for i in range(1, iterations):
-        if verbose:
-            print("Performing iteration {}".format(i))
-        new.update()
-        new.save(file)
-        new = FCM(file)
-
-    if verbose:
-        print(new)
-        print("FCM saved to " + file + " successfully")
-
-    return True
-
-def main():
-
-    verbose = False
-
-    def set_verbose():
-        verbose = True
-        return verbose
-
-    opt = {
-        "-v": set_verbose
-    }
-
-    if len(sys.argv) < 9:
-        print("Insufficient arguments")
-        exit(0)
-
-    w = []
-
-    for i in range(0, 8):
-        w[i] = int(sys.argv[i + 1]) * r[i]
-
-    w = normalise(w)
-
-    l = 9
-
-    while l < len(sys.argv):
-        opt[sys.argv[l]]()
-        l += 1
-
-    new = construct(w)
-
-    if verbose:
-        print("Initialised FCM:")
-        print(new)
-        print("Processing FCM for {} iterations:".format(iterations))
-
-    for i in range(1, iterations):
-        new.update()
-        new.save("./maps/experiment.json")
-        new = FCM("./maps/experiment.json")
-
-    if verbose:
-        print(new)
-
-    trusted = FCM("./maps/trusted.json")
-
-    print("Trust = {}".format(trust(new, trusted)))
-
-if __name__ == "__main__":
-    main()
+for ssid in sorted_ssids:
+    print("{}, {}, {}".format(index, ssid, len(ssids.get(ssid))))
+    index += 1
