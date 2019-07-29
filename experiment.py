@@ -15,8 +15,22 @@ from fcmlib import FCM
 devices = {}
 ssids = {}
 threshold = 0
+limit = 418
+verbose = False
 
-for i in range(0, 418):
+for arg in sys.argv:
+    if arg == "-v":
+        verbose = True
+    if arg == "-l":
+        limit = int(sys.argv[int(sys.argv.index("-l") + 1)])
+
+if verbose:
+    print("\nLoading {} files...".format(limit))
+
+for i in range(0, limit):
+
+    if verbose:
+        print("\r\tLoading file {}...".format(i), end="")
 
     pcap = savefile.load_savefile(open('./data/probes-2013-03-28.pcap{}'.format(i), 'rb'))
 
@@ -39,6 +53,10 @@ for i in range(0, 418):
         else:
             devices.get(src).add(ssid)
 
+if verbose:
+    print("\r\tSuccessfully loaded {} files\n".format(limit))
+    print("Populating SSID datastructures...")
+
 for device in list(devices.keys()):
 
     if len(devices.get(device)) < threshold:
@@ -50,7 +68,70 @@ for device in list(devices.keys()):
         else:
             ssids.get(ssid).add(device)
 
+if verbose:
+    print("Sorting SSID datastructures...")
+
 sorted_ssids = sorted(ssids, key=lambda k: len(ssids[k]), reverse=True)
+
+if verbose:
+    print("\nProcessing SSID weights...")
+
+weights = {}
+
+for ssid_a in sorted_ssids:
+    if verbose:
+        print("\r\tProcessing {}...".format(ssid_a), end="")
+    weight_sum = 1
+    for device in ssids[ssid_a]:
+        weights[ssid_a] = {}
+        for ssid_b in devices[device]:
+            if ssid_a != ssid_b:
+                if ssid_b not in weights[ssid_a].keys():
+                    weights[ssid_a][ssid_b] = 0
+                weights[ssid_a][ssid_b] += 1
+                weight_sum += 1
+    for ssid_b in weights[ssid_a].keys():
+        weights[ssid_a][ssid_b] /= weight_sum
+    weights[ssid_a][ssid_a] = 1
+
+if verbose:
+    print("\r\tSuccessfully processed SSID weights\n")
+    print("Populating FCM...")
+
+map = FCM()
+
+for ssid in sorted_ssids:
+    if verbose:
+        print("\r\tAdding {}...".format(ssid), end="")
+    map.add("I_" + ssid)
+    map.add("O_" + ssid)
+
+if verbose:
+    print("\r\tSuccessfully populated FCM\n")
+    print("Connecting FCM...")
+
+for ssid_a in sorted_ssids:
+    print("\r\tConnecting {}".format(ssid_a), end="")
+    for ssid_b in weights[ssid_a].keys():
+        weight = weights[ssid_a][ssid_b]
+        if weight > 0:
+            map.connect("I_" + ssid_a, "O_" + ssid_b)
+            map["O_" + ssid_b].relation.set("I_" + ssid_a, weight)
+
+if verbose:
+    print("\r\tSuccessfully connected FCM\n")
+    print("Saving FCM...")
+
+map.save("maps/new.json")
+
+print("Successfully saved FCM\n")
+
+#print(map)
+
+#print(weights)
+#print(all_ssids)
+
+"""
 
 #print(devices)
 #print(len(devices))
@@ -61,3 +142,7 @@ index = 0
 for ssid in sorted_ssids:
     print("{}, {}, {}".format(index, ssid, len(ssids.get(ssid))))
     index += 1
+
+"""
+
+print("Program exiting...")
