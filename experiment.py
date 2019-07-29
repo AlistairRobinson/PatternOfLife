@@ -62,7 +62,7 @@ for device in list(devices.keys()):
     if len(devices.get(device)) < threshold:
         del devices[device]
 
-    for ssid in devices.get(device):
+    for ssid in devices.get(device, []):
         if ssids.get(ssid) is None:
             ssids[ssid] = {device}
         else:
@@ -82,13 +82,14 @@ for ssid_a in sorted_ssids:
     if verbose:
         print("\r\tProcessing {}...".format(ssid_a), end="")
     weight_sum = 1
+    weights[ssid_a] = {}
     for device in ssids[ssid_a]:
-        weights[ssid_a] = {}
         for ssid_b in devices[device]:
             if ssid_a != ssid_b:
-                if ssid_b not in weights[ssid_a].keys():
-                    weights[ssid_a][ssid_b] = 0
-                weights[ssid_a][ssid_b] += 1
+                if ssid_b in weights[ssid_a].keys():
+                    weights[ssid_a][ssid_b] += 1
+                else:
+                    weights[ssid_a][ssid_b] = 1
                 weight_sum += 1
     for ssid_b in weights[ssid_a].keys():
         weights[ssid_a][ssid_b] /= weight_sum
@@ -127,9 +128,7 @@ map.save("maps/new.json")
 print("Successfully saved FCM\n")
 
 #print(map)
-
 #print(weights)
-#print(all_ssids)
 
 """
 
