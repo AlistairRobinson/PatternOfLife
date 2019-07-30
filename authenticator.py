@@ -9,6 +9,7 @@ FCM library developed by M Puheim, used under open license
 
 import json
 import sys
+import random
 from pcapfile import savefile
 from fcmlib import FCM
 
@@ -16,11 +17,12 @@ def main():
 
     devices_old = {}
     devices_new = {}
-    ssids = {}
+    ssids = set()
     threshold = 0
     limit = 418
     verbose = False
     map_file = "maps/new.json"
+    iterations = 20
 
     for arg in sys.argv:
         if arg == "-v":
@@ -54,6 +56,7 @@ def main():
 
             # SSID [88:110]
             ssid = bytes.fromhex(packet.raw().hex()[88:110]).decode('utf-8')
+            ssids.add(ssid)
 
             if i < limit / 2:
                 if devices_old.get(src) is None:
@@ -70,8 +73,8 @@ def main():
         print("\r\tSuccessfully loaded {} files\n".format(limit))
         print("Loading template FCM...")
 
-    map_old_template = FCM(map_file)
-    map_new_template = FCM(map_file)
+    with open(map_file, 'r') as f:
+        map_template = f.read()
 
     if verbose:
         print("\tSuccessfully loaded FCM {}\n".format(map_file))
@@ -82,19 +85,20 @@ def main():
             continue
         if verbose:
             print("\tAuthenticating device {}... ".format(device), end="")
-        map_old = FCM(map_old_template.serialize())
-        map_new = FCM(map_new_template.serialize())
+        map_old = FCM(map_template)
+        map_new = FCM(map_template)
         for ssid in devices_old[device]:
             map_old["I_{}".format(ssid)] = 1
         for ssid in devices_new[device]:
+        #for ssid in devices_new[random.choice(list(devices_new))]:
             map_new["I_{}".format(ssid)] = 1
-        for i in range(60):
+        for i in range(iterations):
             map_old.update()
             map_new.update()
         trust = 0
-        for concept in map_old.list().split(";"):
-            trust += abs(map_old[concept].value - map_new[concept].value)
-        print(1 - trust / len(map_old.list()))
+        for ssid in ssids:
+            trust += abs(map_old["O_{}".format(ssid)].value - map_new["O_{}".format(ssid)].value)
+        print(1 - 2 * trust / len(ssids))
 
 
     if verbose:
