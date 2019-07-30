@@ -117,6 +117,7 @@ def main():
         for device_x in maps_new:
             map_old = maps_old[device_y]
             map_new = maps_new[device_x]
+            trust = 0
             for ssid in ssids:
                 trust += abs(map_old["O_{}".format(ssid)].value - map_new["O_{}".format(ssid)].value)
             print(",{}".format(1 - 2 * trust / len(ssids)), end="")
