@@ -16,6 +16,8 @@ from fcmlib import FCM
 def main():
 
     devices_old = {}
+    maps_old = {}
+    maps_new = {}
     devices_new = {}
     ssids = set()
     threshold = 0
@@ -74,12 +76,61 @@ def main():
         print("Loading template FCM...")
 
     with open(map_file, 'r') as f:
-        map_template = f.read()
+        map_template = FCM(f.read())
 
     if verbose:
         print("\tSuccessfully loaded FCM {}\n".format(map_file))
-        print("Authenticating devices...")
+        print("Constructing FCM for old devices...")
 
+    for device in devices_old:
+        if verbose:
+            print("\r\tConstructing device {}... ".format(device), end="")
+        map = map_template
+        for ssid in devices_old[device]:
+            map["I_{}".format(ssid)] = 1
+        for i in range(iterations):
+            map.update()
+        maps_old[device] = map
+
+    if verbose:
+        print("\r\tSuccessfully constructed FCMs\n")
+        print("Constructing FCM for new devices...")
+
+    for device in devices_new:
+        if verbose:
+            print("\r\tConstructing device {}... ".format(device), end="")
+        map = map_template
+        for ssid in devices_new[device]:
+            map["I_{}".format(ssid)] = 1
+        for i in range(iterations):
+            map.update()
+        maps_new[device] = map
+
+    if verbose:
+        print("\r\tSuccessfully constructed FCMs\n")
+
+    for device in maps_new:
+        print(",{}".format(device), end="")
+
+    for device_y in maps_old:
+        print("\n{}".format(device_y), end="")
+        for device_x in maps_new:
+            map_old = maps_old[device_y]
+            map_new = maps_new[device_x]
+            for ssid in ssids:
+                trust += abs(map_old["O_{}".format(ssid)].value - map_new["O_{}".format(ssid)].value)
+            print(",{}".format(1 - 2 * trust / len(ssids)), end="")
+
+    if verbose:
+        print("\r\tAuthentication complete\n")
+        print("Program exiting...")
+
+    return 0
+
+if __name__ == "__main__":
+    main()
+
+"""
     for device in devices_old:
         if device not in devices_new:
             continue
@@ -100,12 +151,4 @@ def main():
             trust += abs(map_old["O_{}".format(ssid)].value - map_new["O_{}".format(ssid)].value)
         print(1 - 2 * trust / len(ssids))
 
-
-    if verbose:
-        print("\r\tAuthentication complete\n")
-        print("Program exiting...")
-
-    return 0
-
-if __name__ == "__main__":
-    main()
+"""
