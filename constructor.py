@@ -36,7 +36,7 @@ def main():
     for i in range(0, limit):
 
         if verbose:
-            print("\r\tLoading file {}...".format(i), end="")
+            print("\r\tLoading file {}... | {}%".format(i, int(i*100/limit)), end="")
 
         pcap = savefile.load_savefile(open('./data/probes-2013-03-28.pcap{}'.format(i), 'rb'))
 
@@ -60,7 +60,7 @@ def main():
                 devices.get(src).add(ssid)
 
     if verbose:
-        print("\r\tSuccessfully loaded {} files\n".format(limit))
+        print("\r\tSuccessfully loaded {} files\t\n".format(limit))
         print("Populating SSID datastructures...")
 
     for device in list(devices.keys()):
@@ -86,7 +86,8 @@ def main():
 
     for ssid_a in sorted_ssids:
         if verbose:
-            print("\r\tProcessing {}...".format(ssid_a), end="")
+            print("\r\tProcessing {}... | {}%".format(ssid_a, 
+                int(sorted_ssids.index(ssid_a)*100/len(sorted_ssids))), end="")
         weight_sum = 0
         weights[ssid_a] = {}
         for device in ssids[ssid_a]:
@@ -102,23 +103,25 @@ def main():
         weights[ssid_a][ssid_a] = 1
 
     if verbose:
-        print("\r\tSuccessfully processed SSID weights\n")
+        print("\r\tSuccessfully processed SSID weights\t\n")
         print("Populating FCM...")
 
     map = FCM()
 
     for ssid in sorted_ssids:
         if verbose:
-            print("\r\tAdding {}...".format(ssid), end="")
+            print("\r\tAdding {}... | {}%".format(ssid,
+                int(sorted_ssids.index(ssid)*100/len(sorted_ssids))), end="")
         map.add("I_" + ssid)
         map.add("O_" + ssid)
 
     if verbose:
-        print("\r\tSuccessfully populated FCM\n")
+        print("\r\tSuccessfully populated FCM\t\n")
         print("Connecting FCM...")
 
     for ssid_a in sorted_ssids:
-        print("\r\tConnecting {}".format(ssid_a), end="")
+        print("\r\tConnecting {}... | {}%".format(ssid_a,
+            int(sorted_ssids.index(ssid_a)*100/len(sorted_ssids))), end="")
         for ssid_b in weights[ssid_a].keys():
             weight = weights[ssid_a][ssid_b]
             if weight > 0:
@@ -126,7 +129,7 @@ def main():
                 map["O_" + ssid_b].relation.set("I_" + ssid_a, weight)
 
     if verbose:
-        print("\r\tSuccessfully connected FCM\n")
+        print("\r\tSuccessfully connected FCM\t\n")
 
     if save_file != "":
         if verbose:
