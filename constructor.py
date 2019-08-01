@@ -28,7 +28,8 @@ def main():
             limit = int(sys.argv[int(sys.argv.index("-l") + 1)])
         if arg == "-s":
             save_file = sys.argv[int(sys.argv.index("-s") + 1)]
-
+        if arg == "-t":
+            threshold = int(sys.argv[int(sys.argv.index("-t") + 1)])
 
     if verbose:
         print("\nLoading {} files...".format(limit))
@@ -74,6 +75,10 @@ def main():
             else:
                 ssids.get(ssid).add(device)
 
+    for ssid in list(ssids.keys()):
+        if len(ssids[ssid]) < threshold:
+            del ssids[ssid]
+
     if verbose:
         print("Sorting SSID datastructures...")
 
@@ -86,7 +91,7 @@ def main():
 
     for ssid_a in sorted_ssids:
         if verbose:
-            print("\r\tProcessing {}... | {}%".format(ssid_a, 
+            print("\r\tProcessing {}... | {}%".format(ssid_a,
                 int(sorted_ssids.index(ssid_a)*100/len(sorted_ssids))), end="")
         weight_sum = 0
         weights[ssid_a] = {}
