@@ -16,27 +16,31 @@ from fcmlib import FCM
 def main():
 
     devices_old = {}
+    devices_new = {}
     maps_old = {}
     maps_new = {}
-    devices_new = {}
     ssids = set()
+    dataset = []
     threshold = 0
     limit = 418
+    size = 10
     verbose = False
     map_file = "maps/new.json"
-    iterations = 20
+    iterations = 60
 
     for arg in sys.argv:
         if arg == "-v":
             verbose = True
         if arg == "-l":
             limit = int(sys.argv[int(sys.argv.index("-l") + 1)])
+        if arg == "-s":
+            size = int(sys.argv[int(sys.argv.index("-s") + 1)])
         if arg == "-m":
             map_file = sys.argv[int(sys.argv.index("-m") + 1)]
 
 
     if verbose:
-        print("\nLoading {} files...".format(limit))
+        print("\nLoading {} files...".format(limit * 2))
 
     for i in range(0, limit):
 
@@ -60,32 +64,57 @@ def main():
             ssid = bytes.fromhex(packet.raw().hex()[88:110]).decode('utf-8')
             ssids.add(ssid)
 
-            if i < limit / 2:
-                if devices_old.get(src) is None:
-                    devices_old[src] = {ssid}
-                else:
-                    devices_old.get(src).add(ssid)
+            if devices_old.get(src) is None:
+                devices_old[src] = {ssid}
             else:
-                if devices_new.get(src) is None:
-                    devices_new[src] = {ssid}
-                else:
-                    devices_new.get(src).add(ssid)
+                devices_old.get(src).add(ssid)
+
+    for i in range(418 - limit, 418):
+
+        if verbose:
+            print("\r\tLoading file {}...".format(i), end="")
+
+        pcap = savefile.load_savefile(open('./data/probes-2013-03-28.pcap{}'.format(i), 'rb'))
+
+        for packet in pcap.packets:
+
+            # Source address [56:68]
+            src = packet.raw().hex()[56:68]
+
+            # Tag length [86:88]
+            tag_length = packet.raw().hex()[86:88]
+
+            if tag_length == "00":
+                continue
+
+            # SSID [88:110]
+            ssid = bytes.fromhex(packet.raw().hex()[88:110]).decode('utf-8')
+            ssids.add(ssid)
+
+            if devices_new.get(src) is None:
+                devices_new[src] = {ssid}
+            else:
+                devices_new.get(src).add(ssid)
 
     if verbose:
-        print("\r\tSuccessfully loaded {} files\n".format(limit))
+        print("\r\tSuccessfully loaded {} files\n".format(limit * 2))
         print("Loading template FCM...")
 
     with open(map_file, 'r') as f:
-        map_template = FCM(f.read())
+        map_template = f.read()
 
     if verbose:
         print("\tSuccessfully loaded FCM {}\n".format(map_file))
         print("Constructing FCM for old devices...")
 
-    for device in devices_old:
+    for device in sorted(devices_old.keys(), key=lambda k: random.random()):
+        if len(dataset) < size and device in devices_new and len(devices_old[device]) > 5:
+            dataset.append(device)
+
+    for device in dataset:
         if verbose:
             print("\r\tConstructing device {}... ".format(device), end="")
-        map = map_template
+        map = FCM(map_template)
         for ssid in devices_old[device]:
             map["I_{}".format(ssid)] = 1
         for i in range(iterations):
@@ -96,10 +125,10 @@ def main():
         print("\r\tSuccessfully constructed FCMs\n")
         print("Constructing FCM for new devices...")
 
-    for device in devices_new:
+    for device in dataset:
         if verbose:
             print("\r\tConstructing device {}... ".format(device), end="")
-        map = map_template
+        map = FCM(map_template)
         for ssid in devices_new[device]:
             map["I_{}".format(ssid)] = 1
         for i in range(iterations):
@@ -117,13 +146,24 @@ def main():
         for device_x in maps_new:
             map_old = maps_old[device_y]
             map_new = maps_new[device_x]
+            list_old = map_old.list()
+            list_new = map_new.list()
             trust = 0
             for ssid in ssids:
-                trust += abs(map_old["O_{}".format(ssid)].value - map_new["O_{}".format(ssid)].value)
-            print(",{}".format(1 - 2 * trust / len(ssids)), end="")
+                concept = "O_{}".format(ssid)
+                if concept in list_old and concept in list_new:
+                    trust += abs(map_old[concept].value - map_new[concept].value)
+                elif concept in list_old:
+                    trust += abs(map_old[concept].value)
+                elif concept in list_new:
+                    trust += abs(map_new[concept].value)
+            trust = ((1 - 2 * trust / len(ssids)) - 0.97) / 0.031
+            intersect = len(devices_old[device_y].intersection(devices_new[device_x]))
+            intersect /= (len(devices_old[device_y]) + len(devices_new[device_x]))/2
+            print(",{}/{}".format((trust + intersect)/2, intersect), end="")
 
     if verbose:
-        print("\r\tAuthentication complete\n")
+        print("\nAuthentication complete\n")
         print("Program exiting...")
 
     return 0
