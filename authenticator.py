@@ -110,7 +110,7 @@ def main():
 
     for device in sorted(devices_old.keys(), key=lambda k: random.random()):
         if len(dataset) < size and device in devices_new:
-            if len(devices_old[device]) > 5 and len(devices_new[device]) > 5:
+            if len(devices_old[device]) > 5 or len(devices_new[device]) > 5:
                 dataset.append(device)
 
     for device in dataset:
@@ -152,16 +152,16 @@ def main():
             #list_new = map_new.list()
             trust = 0
             for ssid in ssids:
-                #i_concept = "I_{}".format(ssid)
+                i_concept = "I_{}".format(ssid)
                 o_concept = "O_{}".format(ssid)
                 if ssid in devices_new[device_x]:
                     try:
-                        trust += 1 - map_old[o_concept].value
+                        trust += 1 - map_old[o_concept].value - map_old[i_concept].value
                     except:
                         trust += 1
                 else:
                     try:
-                        trust += map_old[o_concept].value
+                        trust += map_old[o_concept].value + map_old[i_concept].value
                     except:
                         trust += 0
                 """
