@@ -172,7 +172,7 @@ def main():
                 elif i_concept in list_new:
                     trust += abs(map_new[i_concept].value)
                 """
-            trust = abs(((1 - trust / len(ssid_set)) - 0) / 1)
+            trust = abs(((1 - trust / len(ssids)) - 0) / 1)
             intersect = len(devices_old[device_y].intersection(devices_new[device_x]))
             intersect /= (len(devices_old[device_y]) + len(devices_new[device_x]))/2
             #if intersect > 0.65 or intersect < 0.2:
