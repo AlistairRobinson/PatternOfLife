@@ -12,6 +12,7 @@ import sys
 import random
 from pcapfile import savefile
 from fcmlib import FCM
+from math import sqrt
 
 def main():
 
@@ -108,8 +109,9 @@ def main():
         print("Constructing FCM for old devices...")
 
     for device in sorted(devices_old.keys(), key=lambda k: random.random()):
-        if len(dataset) < size and device in devices_new and len(devices_old[device]) > 5:
-            dataset.append(device)
+        if len(dataset) < size and device in devices_new:
+            if len(devices_old[device]) > 5 and len(devices_new[device]) > 5:
+                dataset.append(device)
 
     for device in dataset:
         if verbose:
@@ -124,7 +126,7 @@ def main():
     if verbose:
         print("\r\tSuccessfully constructed FCMs\n")
         print("Constructing FCM for new devices...")
-
+    """
     for device in dataset:
         if verbose:
             print("\r\tConstructing device {}... ".format(device), end="")
@@ -134,33 +136,50 @@ def main():
         for i in range(iterations):
             map.update()
         maps_new[device] = map
-
+    """
     if verbose:
         print("\r\tSuccessfully constructed FCMs\n")
 
-    for device in maps_new:
+    for device in dataset:
         print(",{}".format(device), end="")
 
     for device_y in maps_old:
         print("\n{}".format(device_y), end="")
-        for device_x in maps_new:
+        for device_x in dataset:
             map_old = maps_old[device_y]
-            map_new = maps_new[device_x]
+            #map_new = maps_new[device_x]
             list_old = map_old.list()
-            list_new = map_new.list()
+            #list_new = map_new.list()
             trust = 0
             for ssid in ssids:
-                concept = "O_{}".format(ssid)
-                if concept in list_old and concept in list_new:
-                    trust += abs(map_old[concept].value - map_new[concept].value)
-                elif concept in list_old:
-                    trust += abs(map_old[concept].value)
-                elif concept in list_new:
-                    trust += abs(map_new[concept].value)
-            trust = ((1 - 2 * trust / len(ssids)) - 0.97) / 0.031
+                #i_concept = "I_{}".format(ssid)
+                o_concept = "O_{}".format(ssid)
+                if ssid in devices_new[device_x]:
+                    try:
+                        trust += 1 - map_old[o_concept].value
+                    except:
+                        trust += 1
+                else:
+                    try:
+                        trust += map_old[o_concept].value
+                    except:
+                        trust += 0
+                """
+                if o_concept in list_old and i_concept in list_new:
+                    trust += abs(map_old[o_concept].value - map_new[i_concept].value)
+                elif o_concept in list_old:
+                    trust += abs(map_old[o_concept].value)
+                elif i_concept in list_new:
+                    trust += abs(map_new[i_concept].value)
+                """
+            trust = abs(((1 - trust / len(ssid_set)) - 0) / 1)
             intersect = len(devices_old[device_y].intersection(devices_new[device_x]))
             intersect /= (len(devices_old[device_y]) + len(devices_new[device_x]))/2
-            print(",{}/{}".format((trust), intersect), end="")
+            #if intersect > 0.65 or intersect < 0.2:
+            #    print(",{}/{}".format(intersect, intersect), end="")
+            #else:
+            #
+            print(",{}/{}".format(trust, intersect), end="")
 
     if verbose:
         print("\nAuthentication complete\n")
