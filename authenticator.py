@@ -160,7 +160,7 @@ def main():
             trust = ((1 - 2 * trust / len(ssids)) - 0.97) / 0.031
             intersect = len(devices_old[device_y].intersection(devices_new[device_x]))
             intersect /= (len(devices_old[device_y]) + len(devices_new[device_x]))/2
-            print(",{}/{}".format((trust + intersect)/2, intersect), end="")
+            print(",{}/{}".format((trust), intersect), end="")
 
     if verbose:
         print("\nAuthentication complete\n")
