@@ -110,7 +110,7 @@ def main():
 
     for device in sorted(devices_old.keys(), key=lambda k: random.random()):
         if len(dataset) < size and device in devices_new:
-            if len(devices_old[device]) > 5 or len(devices_new[device]) > 5:
+            if len(devices_old[device]) > 5 and len(devices_new[device]) > 5:
                 dataset.append(device)
 
     for device in dataset:
