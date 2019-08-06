@@ -119,6 +119,10 @@ def main():
         map = FCM(map_template)
         for ssid in devices_old[device]:
             map["I_{}".format(ssid)] = 1
+            try:
+                map["O_{}".format(ssid)]
+            except:
+                map["O_{}".format(ssid)] = 1
         for i in range(iterations):
             map.update()
         maps_old[device] = map
