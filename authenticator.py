@@ -122,7 +122,9 @@ def main():
             try:
                 map["O_{}".format(ssid)]
             except:
-                map["O_{}".format(ssid)] = 1
+                map["O_{}".format(ssid)] = 0
+                map.connect("I_{}".format(ssid), "O_{}".format(ssid))
+                map["O_{}".format(ssid)].relation.set("I_{}".format(ssid), weight)
         for i in range(iterations):
             map.update()
         maps_old[device] = map
