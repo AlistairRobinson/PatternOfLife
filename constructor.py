@@ -43,16 +43,25 @@ def main():
 
         for packet in pcap.packets:
 
-            # Source address [56:68]
+            # Source address
+            # [56:68] University
+            # [72:84] TheMall
+            # [70:82] Vatican
             src = packet.raw().hex()[56:68]
 
-            # Tag length [86:88]
+            # Tag length
+            # [86:88] University
+            # [102:104] TheMall
+            # [100:102] Vatican
             tag_length = packet.raw().hex()[86:88]
 
             if tag_length == "00":
                 continue
 
-            # SSID [88:110]
+            # SSID
+            # [88:110] University
+            # [104:126] TheMall
+            # [102:124] Vatican
             ssid = bytes.fromhex(packet.raw().hex()[88:110]).decode('utf-8')
 
             if devices.get(src) is None:
