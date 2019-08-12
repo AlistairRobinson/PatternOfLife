@@ -12,6 +12,8 @@ import sys
 from pcapfile import savefile
 from fcmlib import FCM
 
+# Executed as: python3 constructor.py -s maps/university.json -l 208 -t 2
+
 def main():
 
     devices = {}
@@ -23,12 +25,16 @@ def main():
 
     for arg in sys.argv:
         if arg == "-v":
+            # Execute in verbose mode
             verbose = True
         if arg == "-l":
+            # Specify number of files loaded
             limit = int(sys.argv[int(sys.argv.index("-l") + 1)])
         if arg == "-s":
+            # Specify file to save FCM as"
             save_file = sys.argv[int(sys.argv.index("-s") + 1)]
         if arg == "-t":
+            # Specify threshold at which to remove SSIDs and devices
             threshold = int(sys.argv[int(sys.argv.index("-t") + 1)])
 
     if verbose:
@@ -76,6 +82,7 @@ def main():
     for device in list(devices.keys()):
 
         if len(devices.get(device)) < threshold:
+            # Remove devices with only a single SSID
             del devices[device]
 
         for ssid in devices.get(device, []):
@@ -86,6 +93,7 @@ def main():
 
     for ssid in list(ssids.keys()):
         if len(ssids[ssid]) < threshold:
+            # Remove SSIDs with only one saved device
             del ssids[ssid]
 
     if verbose:
