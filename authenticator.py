@@ -21,10 +21,8 @@ def main():
     devices_old = {}
     devices_new = {}
     maps_old = {}
-    maps_new = {}
     ssids = set()
     dataset = []
-    threshold = 0
     limit = 418
     size = 10
     verbose = False
@@ -172,7 +170,6 @@ def main():
         print("\n{}".format(device_y), end="")
         for device_x in dataset:
             map_old = maps_old[device_y]
-            list_old = map_old.list()
             trust = 0
             for ssid in ssids:
                 i_concept = "I_{}".format(ssid)
