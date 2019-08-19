@@ -7,12 +7,10 @@ FCM library developed by M Puheim, used under open license
 # pylint: disable=function-redefined
 # pylint: disable=invalid-name
 
-import json
 import sys
 import random
 from pcapfile import savefile
 from fcmlib import FCM
-from math import sqrt
 
 # Executed as: python3 authenticator.py -m maps/university.json -l 208 -s 500
 
@@ -28,6 +26,7 @@ def main():
     verbose = False
     map_file = "maps/new.json"
     iterations = 60
+    alpha = 6
 
     for arg in sys.argv:
         if arg == "-v":
@@ -39,6 +38,9 @@ def main():
         if arg == "-s":
             # Set maximum result set size
             size = int(sys.argv[int(sys.argv.index("-s") + 1)])
+        if arg == "-a":
+            # Set anomaly threshold alpha
+            alpha = int(sys.argv[int(sys.argv.index("-a") + 1)])
         if arg == "-m":
             # Specify FCM template
             map_file = sys.argv[int(sys.argv.index("-m") + 1)]
@@ -136,9 +138,9 @@ def main():
 
     for device in sorted(devices_old.keys(), key=lambda k: random.random()):
         if len(dataset) < size and device in devices_new:
-            if len(devices_old[device]) > 5 and len(devices_new[device]) > 5:
+            if len(devices_old[device]) >= alpha and len(devices_new[device]) >= alpha:
                 # Only allow devices which appear in both datasets entry into the result set
-                # And remove anomalous devices with less than five saved SSIDs in either dataset
+                # And remove anomalous devices with less than 'alpha' saved SSIDs in either dataset
                 dataset.append(device)
 
     for device in dataset:
@@ -189,7 +191,7 @@ def main():
             intersect = len(devices_old[device_y].intersection(devices_new[device_x]))
             intersect /= (len(devices_old[device_y]) + len(devices_new[device_x]))/2
             # print(",{}/{}".format(trust, intersect), end="")
-            print(",{}".format(trust), end = "")
+            print(",{}".format(trust), end="")
 
     if verbose:
         print("\nAuthentication complete\n")
